@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="#858585" stroke-width="1.5">
+  <!--
+    MNC GENERIC GARMENT FALLBACK ICON
+    Used when product photography is unavailable or in loading/error state
+  -->
+  <path d="M 28 20 L 40 30 L 60 30 L 72 20 L 88 34 L 78 46 L 72 40 L 72 82 L 28 82 L 28 40 L 22 46 L 12 34 Z" fill="#EAE8E2" stroke="#B0AEA7" stroke-linejoin="round" />
+  <path d="M 40 30 C 44 36 56 36 60 30" stroke="#858585" stroke-linecap="round" fill="none" />
+</svg>

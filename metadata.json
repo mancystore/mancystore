@@ -1,0 +1,8 @@
+{
+  "name": "MNC",
+  "description": "Independent contemporary streetwear fashion brand featuring premium everyday silhouettes, heavyweight textiles, and architectural minimalist cuts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

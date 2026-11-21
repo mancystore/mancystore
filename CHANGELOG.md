@@ -4,6 +4,31 @@ All entries below represent verified development changes substantiated by Git co
 
 ---
 
+## [2026-11-21] — Bugfix: ProductCard Blank Frame on Hover & ImageWithFallback Cache Stuck State
+
+### Milestone
+Phase 2 Product Development: Card Interaction & Asset Rendering Stabilization
+
+### Changed / Created Files
+- `src/components/ProductCard.tsx` (Removed erroneous switch to macro texture `images[1]` on hover; added layered crossfade support for secondary garment angles; preserved luxury zoom on primary photo)
+- `src/components/ImageWithFallback.tsx` (Added `imgRef` inspection in `useEffect` so cached/completed images never get trapped in `isLoading: true` / `opacity-0` stuck state)
+- `CHANGELOG.md` (Documented bug diagnosis and fix)
+- `NEXT_SESSION.md` (Updated handoff status)
+
+### Description
+1. **Diagnosed Root Cause**:
+   - `ProductCard.tsx` previously evaluated `hasSecondaryImage = images.length > 1` and called `setCurrentImageIndex(1)` on `mouseenter`. Because `images[1]` across all garments was `SHARED_PRODUCT_TEXTURE` (`mnc_fabric_texture_1793380878865.jpg`), hovering swapped the card from the garment studio photo to a macro fabric texture swatch.
+   - Concurrently, in `ImageWithFallback.tsx`, when `src` toggled, `useEffect` forced `setIsLoading(true)` (`opacity-0`). Because the images were cached or rendered with `loading="lazy"`, the browser either did not re-dispatch the synthetic `onLoad` event or handled it before listener attachment, locking `isLoading: true`. This rendered the image completely transparent, exposing only the skeleton background (`bg-[#E8E6DF]`) and prototype badge.
+2. **Implemented Resolution**:
+   - In `ProductCard.tsx`, only valid garment angles (`product.imageSet?.back && product.imageSet.back !== primaryImage`) trigger a secondary preview layer. Where only the primary front photo exists, the card preserves the garment view with smooth luxury zoom (`group-hover:scale-105 duration-700 ease-out`).
+   - In `ImageWithFallback.tsx`, added `imgRef` checking `imgRef.current?.complete && imgRef.current.naturalWidth > 0` on effect execution to immediately clear `isLoading` for cached images, eliminating blank flashes.
+
+### Verification Result
+- `npm run lint` (`tsc --noEmit`): Passed with 0 errors.
+- `npm run build` (`vite build`): Passed in 1.02s with **0 errors and 0 warnings**.
+
+---
+
 ## [2026-11-21] — Milestone 2.2: Product Variant Linkage & Milestone 2.3: Catalogue Filtering Harmonization
 
 ### Milestone

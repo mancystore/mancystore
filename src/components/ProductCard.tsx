@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Product } from '../types/product';
 import { STOREFRONT_CONFIG } from '../config/storefront.config';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -14,27 +14,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onSelect,
 }) => {
-  const images = product.images ?? [];
   const colours = product.availableColours ?? [];
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const hasSecondaryImage = images.length > 1;
-
-  // Reset the image when the displayed product changes.
-  useEffect(() => {
-    setCurrentImageIndex(0);
-  }, [product.id]);
-
-  const handleMouseEnter = () => {
-    if (hasSecondaryImage) {
-      setCurrentImageIndex(1);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setCurrentImageIndex(0);
-  };
+  // Determine primary garment shot and optional secondary garment angle
+  const primaryImage =
+    product.imageSet?.main || product.images?.[0] || '';
+  const secondaryImage =
+    product.imageSet?.back && product.imageSet.back !== primaryImage
+      ? product.imageSet.back
+      : null;
 
   const handleSelect = () => {
     onSelect(product.id);
@@ -44,20 +32,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <button
       type="button"
       onClick={handleSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       aria-label={`View ${product.name} product details`}
       className="group relative flex w-full cursor-pointer flex-col bg-[#F5F4F0] text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] focus-visible:ring-offset-2"
     >
       {/* Product Image Frame */}
       <div className="relative aspect-[4/5] w-full overflow-hidden border border-[#111111]/12 bg-[#E8E6E0]">
+        {/* Primary Garment Image */}
         <ImageWithFallback
-          src={images[currentImageIndex] || images[0]}
+          src={primaryImage}
           alt={product.name}
           containerClassName="h-full w-full"
           className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           loading="lazy"
         />
+
+        {/* Secondary Garment Image (Smooth Cross-Fade on Hover when available) */}
+        {secondaryImage && (
+          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100">
+            <ImageWithFallback
+              src={secondaryImage}
+              alt={`${product.name} alternate view`}
+              containerClassName="h-full w-full"
+              className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+              loading="lazy"
+            />
+          </div>
+        )}
 
         {/* Prototype Status Label */}
         {STOREFRONT_CONFIG.showPrototypeLabels && (

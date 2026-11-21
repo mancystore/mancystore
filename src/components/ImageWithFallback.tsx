@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FALLBACK_ASSETS } from '../config/assets';
 
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -24,12 +24,19 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [hasError, setHasError] = useState(false);
   const [hasFallbackError, setHasFallbackError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Reset image state whenever the source changes.
+  // Reset image state whenever the source changes, but detect if already cached.
   useEffect(() => {
     setHasError(false);
     setHasFallbackError(false);
-    setIsLoading(true);
+
+    // If the image is already cached or completed, avoid blank flash
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
   }, [src, fallbackSrc]);
 
   // Use the fallback when the original image is missing or fails.
@@ -74,6 +81,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       {effectiveSrc && (
         <img
           {...props}
+          ref={imgRef}
           src={effectiveSrc}
           alt={alt}
           loading={loading ?? 'lazy'}

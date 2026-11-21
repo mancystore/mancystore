@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { FALLBACK_ASSETS } from '../config/assets';
 
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -14,64 +15,106 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className = '',
   containerClassName = '',
   showPrototypeIndicator = false,
+  loading,
+  referrerPolicy,
+  onLoad,
+  onError,
   ...props
 }) => {
   const [hasError, setHasError] = useState(false);
+  const [hasFallbackError, setHasFallbackError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // If no src is provided, immediately treat as fallback
+  // Reset image state whenever the source changes.
+  useEffect(() => {
+    setHasError(false);
+    setHasFallbackError(false);
+    setIsLoading(true);
+  }, [src, fallbackSrc]);
+
+  // Use the fallback when the original image is missing or fails.
   const effectiveSrc = hasError || !src ? fallbackSrc : src;
 
+  const handleLoad = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    setIsLoading(false);
+    onLoad?.(event);
+  };
+
+  const handleError = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    if (!hasError && src && fallbackSrc && src !== fallbackSrc) {
+      // Original image failed. Try the fallback image.
+      setHasError(true);
+      setIsLoading(true);
+    } else {
+      // Both the original and fallback images failed.
+      setHasFallbackError(true);
+      setIsLoading(false);
+    }
+
+    onError?.(event);
+  };
+
   return (
-    <div className={`relative overflow-hidden bg-[#ECEAE3] ${containerClassName}`}>
+    <div
+      className={`relative overflow-hidden bg-[#ECEAE3] ${containerClassName}`}
+    >
       {/* Loading Skeleton */}
-      {isLoading && !hasError && (
-        <div className="absolute inset-0 bg-[#E8E6DF] animate-pulse z-0" />
+      {isLoading && !hasFallbackError && (
+        <div
+          className="absolute inset-0 z-0 animate-pulse bg-[#E8E6DF]"
+          aria-hidden="true"
+        />
       )}
 
-      {/* Actual Image */}
-      <img
-        {...props}
-        src={effectiveSrc}
-        alt={alt}
-        loading={props.loading || 'lazy'}
-        referrerPolicy="no-referrer"
-        onLoad={() => {
-          setIsLoading(false);
-        }}
-        onError={() => {
-          if (!hasError) {
-            setHasError(true);
-            setIsLoading(false);
-          }
-        }}
-        className={`${className} transition-opacity duration-300 ${
-          isLoading && !hasError ? 'opacity-0' : 'opacity-100'
-        }`}
-      />
+      {/* Actual Image or Fallback */}
+      {effectiveSrc && (
+        <img
+          {...props}
+          src={effectiveSrc}
+          alt={alt}
+          loading={loading ?? 'lazy'}
+          referrerPolicy={referrerPolicy ?? 'no-referrer'}
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`${className} transition-opacity duration-300 ${
+            isLoading ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      )}
 
-      {/* Fallback Graphic Overlay when image fails completely */}
-      {hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center select-none bg-[#ECEAE3]">
-          <div className="w-10 h-10 mb-2 opacity-40">
+      {/* Final Placeholder if Both Images Fail */}
+      {hasFallbackError && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center bg-[#ECEAE3] p-4 text-center select-none"
+          role="img"
+          aria-label={`${alt} - image unavailable`}
+        >
+          <div className="mb-2 h-10 w-10 opacity-40">
             <img
               src={FALLBACK_ASSETS.productGarment}
-              alt="MNC Silhouette"
-              className="w-full h-full object-contain"
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-contain"
             />
           </div>
+
           <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#858585]">
             MNC // ASSET PENDING
           </span>
-          <span className="font-mono text-[8px] text-[#9A9A91] uppercase tracking-wider mt-0.5">
+
+          <span className="mt-0.5 font-mono text-[8px] uppercase tracking-wider text-[#9A9A91]">
             [ PROTOTYPE PLACEHOLDER ]
           </span>
         </div>
       )}
 
-      {/* Optional subtle prototype watermark badge (for asset audit mode) */}
+      {/* Prototype Indicator */}
       {showPrototypeIndicator && (
-        <div className="absolute bottom-2 left-2 pointer-events-none bg-[#111111]/70 backdrop-blur-xs text-[#F5F4F0] text-[7.5px] font-mono uppercase tracking-widest px-1.5 py-0.5 z-10">
+        <div className="pointer-events-none absolute bottom-2 left-2 z-10 bg-[#111111]/70 px-1.5 py-0.5 text-[7.5px] font-mono uppercase tracking-widest text-[#F5F4F0] backdrop-blur-sm">
           PROTOTYPE
         </div>
       )}

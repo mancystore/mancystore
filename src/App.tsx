@@ -39,19 +39,27 @@ export default function App() {
       if (
         e.key === '/' &&
         !isSearchOpen &&
-        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
       ) {
         e.preventDefault();
         setIsSearchOpen(true);
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSearchOpen]);
 
   const handleNavigate = (
     page: string,
-    params?: { category?: string; collection?: string; productId?: string }
+    params?: {
+      category?: string;
+      collection?: string;
+      productId?: string;
+    }
   ) => {
     if (params?.productId) {
       setSelectedProductId(params.productId);
@@ -77,11 +85,18 @@ export default function App() {
     setActivePage('product-detail');
   };
 
-  const currentProduct = PRODUCTS.find((p) => p.id === selectedProductId) || PRODUCTS[0];
+  const currentProduct =
+    PRODUCTS.find((product) => product.id === selectedProductId) ||
+    PRODUCTS[0];
+
+  const handleOpenCheckout = () => {
+    setIsCheckoutOpen(true);
+  };
 
   return (
     <CartProvider>
       <div className="min-h-screen flex flex-col bg-[#F5F4F0] text-[#111111]">
+
         {/* Global Announcement Bar */}
         <AnnouncementBar />
 
@@ -128,16 +143,18 @@ export default function App() {
               onSelectProduct={handleSelectProduct}
               onBack={() => setActivePage('shop')}
               onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
-              onOpenCheckout={() => setIsCheckoutOpen(true)}
+              onOpenCheckout={handleOpenCheckout}
             />
           )}
 
-          {activePage === 'about' && <About onNavigate={handleNavigate} />}
+          {activePage === 'about' && (
+            <About onNavigate={handleNavigate} />
+          )}
 
           {activePage === 'cart' && (
             <Cart
               onNavigate={handleNavigate}
-              onOpenCheckout={() => setIsCheckoutOpen(true)}
+              onOpenCheckout={handleOpenCheckout}
               onSelectProduct={handleSelectProduct}
             />
           )}
@@ -149,30 +166,37 @@ export default function App() {
           onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
         />
 
-        {/* Modals & Slide-out Drawers */}
+        {/* Search Modal */}
         <SearchModal
           isOpen={isSearchOpen}
           onClose={() => setIsSearchOpen(false)}
           onSelectProduct={handleSelectProduct}
         />
 
+        {/* Cart Drawer */}
         <CartDrawer
-          onOpenCheckout={() => setIsCheckoutOpen(true)}
+          onOpenCheckout={handleOpenCheckout}
           onNavigateToCart={() => setActivePage('cart')}
           onContinueShopping={() => setActivePage('shop')}
         />
 
+        {/* Size Guide Modal */}
         <SizeGuideModal
           isOpen={isSizeGuideOpen}
           onClose={() => setIsSizeGuideOpen(false)}
           category={currentProduct?.category}
         />
 
+        {/* Demonstration Checkout Modal */}
         <DemonstrationCheckoutModal
           isOpen={isCheckoutOpen}
           onClose={() => setIsCheckoutOpen(false)}
-          onContinueShopping={() => setActivePage('shop')}
+          onContinueShopping={() => {
+            setIsCheckoutOpen(false);
+            setActivePage('shop');
+          }}
         />
+
       </div>
     </CartProvider>
   );

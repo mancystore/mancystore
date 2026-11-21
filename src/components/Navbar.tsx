@@ -1,19 +1,34 @@
 import React, { useState } from 'react';
-import { Search, ShoppingBag, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Search, ShoppingBag, Eye, Menu, X, ArrowUpRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { BRAND_CONFIG } from '../config/brand.config';
+import { STOREFRONT_CONFIG } from '../config/storefront.config';
 
 interface NavbarProps {
   activePage: string;
-  onNavigate: (page: string, params?: { category?: string; collection?: string; productId?: string }) => void;
+  onNavigate: (
+    page: string,
+    params?: {
+      category?: string;
+      collection?: string;
+      productId?: string;
+    }
+  ) => void;
   onSearchOpen: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearchOpen }) => {
-  const { totalItems, openCartDrawer } = useCart();
+export const Navbar: React.FC<NavbarProps> = ({
+  activePage,
+  onNavigate,
+  onSearchOpen,
+}) => {
+  const { openCartDrawer, totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (page: string, params?: { category?: string; collection?: string }) => {
+  const handleNavClick = (
+    page: string,
+    params?: { category?: string; collection?: string }
+  ) => {
     onNavigate(page, params);
     setMobileMenuOpen(false);
   };
@@ -22,7 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
     <>
       <header className="sticky top-0 z-40 bg-[#F5F4F0]/95 backdrop-blur-md border-b border-[#111111]/12 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between gap-8">
-          {/* Zone 1: Brand Wordmark (Architectural Kerning & Streetwear Authority) */}
+
+          {/* Brand Wordmark */}
           <div className="flex items-center shrink-0">
             <button
               onClick={() => handleNavClick('home')}
@@ -33,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
             </button>
           </div>
 
-          {/* Zone 2: Editorial Navigation Links */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-9 text-xs font-medium uppercase tracking-[0.16em] text-[#111111]">
             <button
               onClick={() => handleNavClick('shop')}
@@ -45,6 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
             >
               Catalogue
             </button>
+
             <button
               onClick={() => handleNavClick('collections')}
               className={`hover:text-[#111111] transition-all py-1.5 cursor-pointer whitespace-nowrap shrink-0 relative ${
@@ -55,12 +72,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
             >
               Collections
             </button>
+
             <button
               onClick={() => handleNavClick('shop', { category: 'Tees' })}
               className="text-[#858585] hover:text-[#111111] transition-all py-1.5 cursor-pointer whitespace-nowrap shrink-0"
             >
               Heavyweight Tees
             </button>
+
             <button
               onClick={() => handleNavClick('about')}
               className={`hover:text-[#111111] transition-all py-1.5 cursor-pointer whitespace-nowrap shrink-0 relative ${
@@ -73,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
             </button>
           </nav>
 
-          {/* Zone 3: Search & Bag Actions */}
+          {/* Search and Bag / Preview */}
           <div className="flex items-center gap-4 sm:gap-6 shrink-0">
             <button
               onClick={onSearchOpen}
@@ -86,14 +105,27 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
 
             <button
               onClick={openCartDrawer}
-              aria-label="Shopping Bag"
+              aria-label={
+                STOREFRONT_CONFIG.allowAddToCart
+                  ? `Shopping Bag with ${totalItems} items`
+                  : 'Open storefront preview information'
+              }
               className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#111111] hover:opacity-80 transition-opacity cursor-pointer py-1"
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span className="hidden sm:inline text-[11px]">Bag</span>
-              <span className="font-mono text-xs font-bold bg-[#111111] text-[#F5F4F0] px-2 py-0.5 tabular-nums">
-                {totalItems}
-              </span>
+              {STOREFRONT_CONFIG.allowAddToCart ? (
+                <>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Bag</span>
+                  <span className="font-mono text-xs font-bold bg-[#111111] text-[#F5F4F0] px-2 py-0.5 tabular-nums">
+                    {totalItems}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Preview</span>
+                </>
+              )}
             </button>
 
             {/* Mobile Menu Trigger */}
@@ -102,15 +134,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
               className="md:hidden text-[#111111] p-1 cursor-pointer"
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen
+                ? <X className="w-6 h-6" />
+                : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Editorial Mobile Menu Overlay */}
+      {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-18 z-50 bg-[#F5F4F0] border-t border-[#111111]/12 flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200">
+
           <div className="space-y-6 pt-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#858585]">
               MNC STOREFRONT // NAVIGATION
@@ -124,6 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
                 <span>01 · Full Catalogue</span>
                 <ArrowUpRight className="w-4 h-4 text-[#858585]" />
               </button>
+
               <button
                 onClick={() => handleNavClick('collections')}
                 className="py-3.5 flex justify-between items-center text-left hover:text-[#858585] transition-colors cursor-pointer"
@@ -131,20 +167,23 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
                 <span>02 · Collections Archive</span>
                 <ArrowUpRight className="w-4 h-4 text-[#858585]" />
               </button>
+
               <button
                 onClick={() => handleNavClick('shop', { category: 'Tees' })}
                 className="py-3.5 flex justify-between items-center text-left text-[#555555] hover:text-[#111111] transition-colors cursor-pointer"
               >
-                <span>03 · Heavyweight Tees (300+ GSM)</span>
+                <span>03 · Heavyweight Tees</span>
                 <ArrowUpRight className="w-4 h-4 text-[#858585]" />
               </button>
+
               <button
                 onClick={() => handleNavClick('shop', { category: 'Hoodies' })}
                 className="py-3.5 flex justify-between items-center text-left text-[#555555] hover:text-[#111111] transition-colors cursor-pointer"
               >
-                <span>04 · Hoodies & Outerwear</span>
+                <span>04 · Hoodies</span>
                 <ArrowUpRight className="w-4 h-4 text-[#858585]" />
               </button>
+
               <button
                 onClick={() => handleNavClick('about')}
                 className="py-3.5 flex justify-between items-center text-left hover:text-[#858585] transition-colors cursor-pointer"
@@ -155,13 +194,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activePage, onNavigate, onSearch
             </nav>
           </div>
 
+          {/* Mobile Footer */}
           <div className="py-6 border-t border-[#111111]/10 space-y-3 text-xs font-mono text-[#858585]">
             <div className="flex justify-between items-center text-[#111111]">
-              <span className="uppercase tracking-widest text-[10px]">Currency:</span>
+              <span className="uppercase tracking-widest text-[10px]">
+                Currency:
+              </span>
               <span className="font-bold">MYR (Malaysian Ringgit)</span>
             </div>
+
+            <div className="flex justify-between items-center text-[#111111]">
+              <span className="uppercase tracking-widest text-[10px]">
+                Storefront Mode:
+              </span>
+              <span className="font-bold">{STOREFRONT_CONFIG.mode} MODE</span>
+            </div>
+
             <p className="text-[11px] leading-relaxed">
-              MNC Contemporary Streetwear — Phase 1 Established Brand Art Direction.
+              MNC — Independent Streetwear Design Concept.
+              Dense textiles (300–500 GSM) and architectural boxy drape.
             </p>
           </div>
         </div>

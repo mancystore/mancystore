@@ -30,7 +30,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
     setSelectedCategory(initialCategory);
   }, [initialCategory]);
 
-  const categories: ProductCategory[] = ['All', 'Hoodies', 'Tees'];
+  const categories: ProductCategory[] = [
+    'All',
+    'Hoodies',
+    'Tees',
+    'Shirts',
+    'Long Sleeves',
+  ];
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];

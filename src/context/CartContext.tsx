@@ -1,8 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from 'react';
+
 import { CartItem, ProductColor } from '../types/product';
+import { STOREFRONT_CONFIG } from '../config/storefront.config';
 
 interface CartContextType {
   items: CartItem[];
+
   addToCart: (
     item: {
       productId: string;
@@ -15,11 +23,14 @@ interface CartContextType {
     },
     quantity?: number
   ) => void;
+
   updateQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
+
   subtotal: number;
   totalItems: number;
+
   isCartDrawerOpen: boolean;
   setIsCartDrawerOpen: (open: boolean) => void;
   openCartDrawer: () => void;
@@ -30,40 +41,82 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'mnc_streetwear_cart_demo';
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Validate stored cart data before hydrating from localStorage.
+const isValidCartItem = (item: unknown): item is CartItem => {
+  if (!item || typeof item !== 'object') {
+    return false;
+  }
+
+  const value = item as Record<string, unknown>;
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.productId === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.price === 'number' &&
+    Number.isFinite(value.price) &&
+    value.price >= 0 &&
+    typeof value.quantity === 'number' &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0 &&
+    typeof value.size === 'string' &&
+    Boolean(value.color) &&
+    typeof value.image === 'string' &&
+    typeof value.slug === 'string'
+  );
+};
+
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const isStrictPreview =
+    STOREFRONT_CONFIG.mode === 'PREVIEW' && !STOREFRONT_CONFIG.allowAddToCart;
+
   const [items, setItems] = useState<CartItem[]>(() => {
+    if (isStrictPreview) {
+      return [];
+    }
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.filter(
-            (item): item is CartItem =>
-              Boolean(item) &&
-              typeof item.id === 'string' &&
-              typeof item.price === 'number' &&
-              !isNaN(item.price) &&
-              typeof item.quantity === 'number' &&
-              item.quantity > 0
-          );
-        }
+      if (!stored) {
+        return [];
       }
+
+      const parsed: unknown = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed.filter(isValidCartItem);
     } catch {
-      // LocalStorage access fallback
+      return [];
     }
-    return [];
   });
 
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
+  // Synchronize cart storage with localStorage
   useEffect(() => {
+    if (isStrictPreview) {
+      setItems([]);
+      setIsCartDrawerOpen(false);
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore unavailable LocalStorage.
+      }
+      return;
+    }
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
-      // Ignore quota errors
+      // Ignore LocalStorage quota errors.
     }
-  }, [items]);
+  }, [items, isStrictPreview]);
 
+  // Add item to shopping bag with compound key deduplication
   const addToCart = (
     itemData: {
       productId: string;
@@ -76,17 +129,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     quantity: number = 1
   ) => {
+    if (!STOREFRONT_CONFIG.allowAddToCart) {
+      return;
+    }
+
     const itemKey = `${itemData.productId}-${itemData.size}-${itemData.color.name}`;
 
-    setItems((prev) => {
-      const existingIndex = prev.findIndex((i) => i.id === itemKey);
+    setItems((previous) => {
+      const existingIndex = previous.findIndex((i) => i.id === itemKey);
       if (existingIndex > -1) {
-        const next = [...prev];
-        next[existingIndex].quantity += quantity;
+        const next = [...previous];
+        next[existingIndex] = {
+          ...next[existingIndex],
+          quantity: next[existingIndex].quantity + quantity,
+        };
         return next;
       }
+
       return [
-        ...prev,
+        ...previous,
         {
           id: itemKey,
           productId: itemData.productId,
@@ -105,30 +166,66 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsCartDrawerOpen(true);
   };
 
+  // Update quantity only when quantity changes are permitted
   const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
+    if (
+      !STOREFRONT_CONFIG.allowCartQuantityChanges ||
+      !Number.isInteger(delta) ||
+      delta === 0
+    ) {
+      return;
+    }
+
+    setItems((previous) =>
+      previous
         .map((item) => {
-          if (item.id === id) {
-            const nextQty = item.quantity + delta;
-            return nextQty > 0 ? { ...item, quantity: nextQty } : null;
+          if (item.id !== id) {
+            return item;
           }
-          return item;
+
+          const nextQuantity = item.quantity + delta;
+
+          return nextQuantity > 0
+            ? { ...item, quantity: nextQuantity }
+            : null;
         })
-        .filter((i): i is CartItem => i !== null)
+        .filter((item): item is CartItem => item !== null)
     );
   };
 
+  // Remove an item from the shopping bag
   const removeFromCart = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    if (!STOREFRONT_CONFIG.allowCartQuantityChanges) {
+      return;
+    }
+
+    setItems((previous) => previous.filter((item) => item.id !== id));
   };
 
+  // Clear all items from the bag
   const clearCart = () => {
     setItems([]);
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+  // Calculate cart subtotal in MYR
+  const subtotal = items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  // Calculate total quantity of garments
+  const totalItems = items.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+
+  const openCartDrawer = () => {
+    setIsCartDrawerOpen(true);
+  };
+
+  const closeCartDrawer = () => {
+    setIsCartDrawerOpen(false);
+  };
 
   return (
     <CartContext.Provider
@@ -142,8 +239,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         totalItems,
         isCartDrawerOpen,
         setIsCartDrawerOpen,
-        openCartDrawer: () => setIsCartDrawerOpen(true),
-        closeCartDrawer: () => setIsCartDrawerOpen(false),
+        openCartDrawer,
+        closeCartDrawer,
       }}
     >
       {children}
@@ -153,8 +250,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useCart = () => {
   const context = useContext(CartContext);
+
   if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
+
   return context;
 };

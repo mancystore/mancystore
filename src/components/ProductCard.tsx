@@ -36,7 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       className="group relative flex w-full cursor-pointer flex-col bg-[#F5F4F0] text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] focus-visible:ring-offset-2"
     >
       {/* Product Image Frame */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden border border-[#111111]/12 bg-[#E8E6E0]">
+      <div className="relative aspect-4/5 w-full overflow-hidden border border-[#111111]/12 bg-[#E8E6E0]">
         {/* Primary Garment Image */}
         <ImageWithFallback
           src={primaryImage}
@@ -61,8 +61,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Prototype Status Label */}
         {STOREFRONT_CONFIG.showPrototypeLabels && (
-          <div className="absolute left-3 top-3 z-10 bg-[#111111] px-2.5 py-1.5 text-[#F5F4F0]">
-            <span className="font-mono text-[9px] uppercase tracking-[0.18em]">
+          <div className="absolute left-2.5 top-2.5 z-10 flex items-center justify-center bg-[#111111] px-2 py-1 text-[#F5F4F0]">
+            <span className="font-mono text-[8px] leading-none uppercase tracking-[0.12em]">
               Prototype
             </span>
           </div>

@@ -1,3 +1,4 @@
+
 import { Product, ProductVariant } from '../types/product';
 import { getProductImageList, getProductImageSet } from '../config/assets';
 
@@ -12,7 +13,7 @@ export const PRODUCTS: Product[] = [
     price: 329,
     category: 'Hoodies',
     collectionId: 'mnc-essentials',
-    collectionName: 'MNC ESSENTIALS',
+    collectionName: 'MNC CORE',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Pitch Black', hex: '#111111' },
@@ -78,7 +79,7 @@ export const PRODUCTS: Product[] = [
     price: 329,
     category: 'Hoodies',
     collectionId: 'mnc-essentials',
-    collectionName: 'MNC ESSENTIALS',
+    collectionName: 'MNC CORE',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Heather Ash', hex: '#8F9194' },
@@ -144,7 +145,7 @@ export const PRODUCTS: Product[] = [
     price: 349,
     category: 'Hoodies',
     collectionId: 'mnc-season-001',
-    collectionName: 'MNC SEASON 001',
+    collectionName: 'MNC EDITION',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Washed Charcoal', hex: '#37383B' },
@@ -210,7 +211,7 @@ export const PRODUCTS: Product[] = [
     price: 149,
     category: 'Tees',
     collectionId: 'mnc-essentials',
-    collectionName: 'MNC ESSENTIALS',
+    collectionName: 'MNC CORE',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Off-White', hex: '#EDEBE6' },
@@ -276,7 +277,7 @@ export const PRODUCTS: Product[] = [
     price: 149,
     category: 'Tees',
     collectionId: 'mnc-essentials',
-    collectionName: 'MNC ESSENTIALS',
+    collectionName: 'MNC CORE',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Pitch Black', hex: '#111111' },
@@ -342,7 +343,7 @@ export const PRODUCTS: Product[] = [
     price: 159,
     category: 'Tees',
     collectionId: 'mnc-archive',
-    collectionName: 'MNC ARCHIVE',
+    collectionName: 'MNC FORM',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColours: [
       { name: 'Warm Beige', hex: '#CFC5B4' },

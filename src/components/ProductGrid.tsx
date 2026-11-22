@@ -117,8 +117,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#858585]" />
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                id="product-sort"
+                name="sort"
                 className="bg-[#FFFFFF] border border-[#111111]/15 px-3 py-1.5 text-xs font-mono uppercase text-[#111111] outline-none cursor-pointer hover:border-[#111111]/40"
               >
                 <option value="featured">Sort: Featured</option>

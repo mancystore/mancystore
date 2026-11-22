@@ -1,5 +1,15 @@
+
 import React from 'react';
-import { ArrowLeft, Eye, ShoppingBag, Plus, Minus, Trash2, ArrowRight, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  ShoppingBag,
+  Plus,
+  Minus,
+  Trash2,
+  ArrowRight,
+  ShieldCheck,
+} from 'lucide-react';
 import { Button } from '../components/Button';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { useCart } from '../context/CartContext';
@@ -23,11 +33,8 @@ export const Cart: React.FC<CartProps> = ({
   } = useCart();
 
   const isStrictPreview =
-    STOREFRONT_CONFIG.mode === 'PREVIEW' && !STOREFRONT_CONFIG.allowAddToCart;
-
-  const freeShippingThreshold = 250;
-  const shippingCost = subtotal > freeShippingThreshold || subtotal === 0 ? 0 : 15;
-  const grandTotal = subtotal + shippingCost;
+    STOREFRONT_CONFIG.mode === 'PREVIEW' &&
+    !STOREFRONT_CONFIG.allowAddToCart;
 
   // Render Preview-Only Informational View
   if (isStrictPreview) {
@@ -114,7 +121,7 @@ export const Cart: React.FC<CartProps> = ({
     );
   }
 
-  // Render Interactive Shopping Bag View
+  // Render Empty Shopping Bag View
   if (items.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center space-y-6">
@@ -160,7 +167,7 @@ export const Cart: React.FC<CartProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        {/* Cart Items Table (Col 1-8) */}
+        {/* Cart Items */}
         <div className="lg:col-span-8 space-y-6">
           <div className="divide-y divide-[#111111]/10 border-t border-b border-[#111111]/10">
             {items.map((item) => (
@@ -168,7 +175,6 @@ export const Cart: React.FC<CartProps> = ({
                 key={item.id}
                 className="py-6 flex flex-col sm:grid sm:grid-cols-12 gap-4 sm:gap-6 items-start sm:items-center"
               >
-                {/* Garment Thumbnail & Details (Col 1-6) */}
                 <div className="w-full sm:col-span-6 flex gap-4">
                   <ImageWithFallback
                     src={item.image}
@@ -187,6 +193,7 @@ export const Cart: React.FC<CartProps> = ({
                         <div>
                           Size: <strong className="text-[#111111]">{item.size}</strong>
                         </div>
+
                         <div className="flex items-center gap-1.5">
                           <span>Colour:</span>
                           <span
@@ -208,15 +215,16 @@ export const Cart: React.FC<CartProps> = ({
                   </div>
                 </div>
 
-                {/* Unit Price (Col 7-8) */}
+                {/* Unit Price */}
                 <div className="w-full sm:col-span-2 sm:text-center text-xs font-mono tabular-nums text-[#858585] flex justify-between sm:block">
                   <span className="sm:hidden font-sans">Unit Price:</span>
                   <span>RM {item.price}</span>
                 </div>
 
-                {/* Quantity Stepper (Col 9-10) */}
+                {/* Quantity */}
                 <div className="w-full sm:col-span-2 flex justify-between sm:justify-center items-center">
                   <span className="sm:hidden text-xs text-[#858585]">Quantity:</span>
+
                   <div className="flex items-center border border-[#111111] bg-[#FFFFFF]">
                     <button
                       onClick={() => updateQuantity(item.id, -1)}
@@ -225,9 +233,11 @@ export const Cart: React.FC<CartProps> = ({
                     >
                       <Minus className="w-3 h-3" />
                     </button>
+
                     <span className="px-3 text-xs font-mono font-bold tabular-nums text-[#111111]">
                       {item.quantity}
                     </span>
+
                     <button
                       onClick={() => updateQuantity(item.id, 1)}
                       className="p-1.5 text-[#858585] hover:text-[#111111] cursor-pointer"
@@ -238,9 +248,11 @@ export const Cart: React.FC<CartProps> = ({
                   </div>
                 </div>
 
-                {/* Line Total (Col 11-12) */}
+                {/* Line Total */}
                 <div className="w-full sm:col-span-2 sm:text-right text-sm font-mono font-bold tabular-nums text-[#111111] flex justify-between sm:block">
-                  <span className="sm:hidden font-sans font-normal text-xs text-[#858585]">Subtotal:</span>
+                  <span className="sm:hidden font-sans font-normal text-xs text-[#858585]">
+                    Subtotal:
+                  </span>
                   <span>RM {item.price * item.quantity}</span>
                 </div>
               </div>
@@ -258,7 +270,7 @@ export const Cart: React.FC<CartProps> = ({
           </div>
         </div>
 
-        {/* Order Summary (Col 9-12) */}
+        {/* Order Summary */}
         <div className="lg:col-span-4 bg-[#FFFFFF] border border-[#111111]/10 p-6 space-y-6">
           <h2 className="text-base font-display font-bold uppercase tracking-wider text-[#111111] border-b border-[#111111]/10 pb-4">
             Order Summary
@@ -267,31 +279,49 @@ export const Cart: React.FC<CartProps> = ({
           <div className="space-y-3 text-xs">
             <div className="flex justify-between text-[#858585]">
               <span>Merchandise Subtotal</span>
-              <span className="font-mono tabular-nums text-[#111111] font-semibold">RM {subtotal}</span>
-            </div>
-            <div className="flex justify-between text-[#858585]">
-              <span>Domestic Express Shipping</span>
-              <span className="font-mono tabular-nums text-[#111111]">
-                {shippingCost === 0 ? 'FREE (Threshold met)' : `RM ${shippingCost}`}
+              <span className="font-mono tabular-nums text-[#111111] font-semibold">
+                RM {subtotal}
               </span>
             </div>
+
+            <div className="flex justify-between text-[#858585]">
+              <span>Shipping</span>
+              <span className="text-[#111111]">
+                Calculated at checkout
+              </span>
+            </div>
+
             <div className="flex justify-between text-[#858585]">
               <span>Currency</span>
               <span className="font-mono text-[#111111]">MYR (RM)</span>
             </div>
 
             <div className="border-t border-[#111111]/10 pt-4 flex justify-between items-baseline text-sm font-bold text-[#111111]">
-              <span className="uppercase tracking-wider">Estimated Total</span>
-              <span className="font-mono tabular-nums text-lg">RM {grandTotal}</span>
+              <span className="uppercase tracking-wider">Total before shipping</span>
+              <span className="font-mono tabular-nums text-lg">
+                RM {subtotal}
+              </span>
             </div>
           </div>
 
           <div className="pt-2 space-y-3">
-            <Button variant="primary" fullWidth size="lg" onClick={onOpenCheckout} className="cursor-pointer">
-              <span>Demonstration Checkout</span>
+            <Button
+              variant="primary"
+              fullWidth
+              size="lg"
+              onClick={onOpenCheckout}
+              className="cursor-pointer"
+            >
+              <span>Proceed to Checkout</span>
               <ArrowRight className="w-4 h-4 ml-2 inline" />
             </Button>
-            <Button variant="outline" fullWidth onClick={() => onNavigate('shop')} className="cursor-pointer">
+
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => onNavigate('shop')}
+              className="cursor-pointer"
+            >
               Continue Shopping
             </Button>
           </div>
@@ -299,10 +329,11 @@ export const Cart: React.FC<CartProps> = ({
           <div className="border-t border-[#111111]/10 pt-4 text-[11px] text-[#858585] space-y-2">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-3.5 h-3.5 text-[#111111] shrink-0" />
-              <span>Demonstration Prototype (Phase 2)</span>
+              <span>Demonstration Prototype</span>
             </div>
+
             <p className="leading-relaxed">
-              No real payments are collected. This screen allows full testing of cart calculations, item editing, and order simulations.
+              No real payments are collected. This demonstration allows testing of cart calculations, item editing, and the checkout flow.
             </p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, ShoppingBag, Eye, Menu, X, ArrowUpRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -71,13 +72,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               Collections
-            </button>
-
-            <button
-              onClick={() => handleNavClick('shop', { category: 'Tees' })}
-              className="text-[#858585] hover:text-[#111111] transition-all py-1.5 cursor-pointer whitespace-nowrap shrink-0"
-            >
-              Heavyweight Tees
             </button>
 
             <button

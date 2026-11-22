@@ -50,8 +50,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSel
         <div className="flex items-center px-4 sm:px-6 py-4 border-b border-[#111111]/10 gap-3">
           <Search className="w-5 h-5 text-[#858585] shrink-0" />
           <input
+            id="product-search"
+            name="search"
             ref={inputRef}
             type="text"
+            autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by garment, GSM, collection or silhouette..."

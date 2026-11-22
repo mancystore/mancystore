@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Product, ProductColor } from '../types/product';
 import { STOREFRONT_CONFIG } from '../config/storefront.config';
@@ -36,6 +37,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   onOpenSizeGuide,
 }) => {
   const { addToCart } = useCart();
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>(
     product.availableSizes[0] || 'M'
@@ -53,14 +55,21 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     'details' | 'fabric' | 'care'
   >('details');
 
-  // Find active variant corresponding to currently selected size & color
-  const activeVariant =
-    product.variants?.find(
-      (v) => v.size === selectedSize && v.color.name === selectedColor.name
-    ) ||
-    product.variants?.find((v) => v.size === selectedSize);
+  const hasVariantData = Boolean(product.variants?.length);
 
-  const isOutOfStock = Boolean(activeVariant && activeVariant.stockCount === 0);
+  const activeVariant = product.variants?.find(
+    (variant) =>
+      variant.size === selectedSize &&
+      variant.color.name === selectedColor.name
+  );
+
+  const isOutOfStock = hasVariantData
+    ? !activeVariant || activeVariant.stockCount <= 0
+    : product.stockCount <= 0;
+
+  const availableStock = hasVariantData
+    ? activeVariant?.stockCount ?? 0
+    : product.stockCount;
 
   // Reset selections when switching products
   React.useEffect(() => {
@@ -76,6 +85,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     setIsAddedFeedback(false);
     setIsLightboxOpen(false);
   }, [product.id]);
+
+  // Reset confirmation when changing variant
+  React.useEffect(() => {
+    setIsAddedFeedback(false);
+  }, [selectedSize, selectedColor.name]);
 
   // Handle ESC key for lightbox
   React.useEffect(() => {
@@ -119,7 +133,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   };
 
   const handleAddToCart = () => {
-    if (!STOREFRONT_CONFIG.allowAddToCart || isOutOfStock) return;
+    if (
+      !STOREFRONT_CONFIG.allowAddToCart ||
+      isOutOfStock ||
+      quantity > availableStock
+    ) {
+      return;
+    }
 
     addToCart(
       {
@@ -135,12 +155,15 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     );
 
     setIsAddedFeedback(true);
-    setTimeout(() => setIsAddedFeedback(false), 2200);
+
+    window.setTimeout(() => {
+      setIsAddedFeedback(false);
+    }, 2000);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-16">
-      {/* Editorial Breadcrumb with Dynamic Variant SKU */}
+      {/* Editorial Breadcrumb */}
       <div className="flex items-center justify-between text-[11px] font-mono text-[#858585] border-b border-[#111111]/12 pb-4">
         <button
           onClick={onBack}
@@ -165,7 +188,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
         {/* Product Gallery */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[4/5] bg-[#EAE8E2] border border-[#111111]/12 overflow-hidden group select-none">
+          <div className="relative aspect-4/5 bg-[#EAE8E2] border border-[#111111]/12 overflow-hidden group select-none">
             <ImageWithFallback
               src={product.images[selectedImage] || product.images[0]}
               alt={`${product.name} view ${selectedImage + 1}`}
@@ -174,7 +197,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               onClick={() => setIsLightboxOpen(true)}
             />
 
-            {/* Corner Badges */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10 pointer-events-none">
               {STOREFRONT_CONFIG.showPrototypeLabels && (
                 <span className="bg-[#111111] text-[#F5F4F0] text-[10px] uppercase font-mono px-2.5 py-1 tracking-widest font-bold">
@@ -193,7 +215,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               )}
             </div>
 
-            {/* Lightbox Trigger */}
             <button
               onClick={() => setIsLightboxOpen(true)}
               className="absolute top-4 right-4 bg-[#111111]/70 hover:bg-[#111111] text-[#F5F4F0] p-2 transition-colors cursor-pointer z-10"
@@ -202,7 +223,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               <Maximize2 className="w-4 h-4" />
             </button>
 
-            {/* Gallery Navigation */}
             {product.images.length > 1 && (
               <>
                 <button
@@ -229,20 +249,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               </>
             )}
 
-            {/* Image Counter */}
             <div className="absolute bottom-4 right-4 bg-[#111111]/85 backdrop-blur-xs text-[#F5F4F0] text-[10px] font-mono px-2.5 py-1 z-10">
               FRAME [ 0{selectedImage + 1} / 0{product.images.length} ]
             </div>
           </div>
 
-          {/* Thumbnail Strip */}
           {product.images.length > 1 && (
             <div className="grid grid-cols-3 gap-3">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`aspect-[4/3] border overflow-hidden cursor-pointer transition-all relative ${
+                  className={`aspect-4/3 border overflow-hidden cursor-pointer transition-all relative ${
                     selectedImage === idx
                       ? 'border-[#111111] ring-2 ring-[#111111]'
                       : 'border-[#111111]/15 opacity-70 hover:opacity-100'
@@ -266,25 +284,28 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
         {/* Product Information */}
         <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
-          {/* Header Metadata with Dynamic Stock Status */}
           <div className="flex items-center justify-between text-xs font-mono text-[#858585]">
             <span className="uppercase tracking-widest">
               [ {product.category} ]
             </span>
+
             <span
               className={`font-semibold ${
                 isOutOfStock ? 'text-red-700 font-bold' : 'text-[#111111]'
               }`}
             >
-              {activeVariant
-                ? activeVariant.stockCount > 0
-                  ? `In Stock (${activeVariant.stockCount} units)`
-                  : 'Out of Stock'
-                : product.demoStock}
+              {hasVariantData
+                ? activeVariant
+                  ? activeVariant.stockCount > 0
+                    ? `In Stock (${activeVariant.stockCount} units)`
+                    : 'Out of Stock'
+                  : 'Variant Unavailable'
+                : product.stockCount > 0
+                  ? `In Stock (${product.stockCount} units)`
+                  : 'Out of Stock'}
             </span>
           </div>
 
-          {/* Product Title & Indicative Price */}
           <div className="space-y-2 border-b border-[#111111]/12 pb-6">
             <h1 className="text-3xl sm:text-4xl font-display font-black uppercase tracking-tight text-[#111111] leading-tight">
               {product.name}
@@ -325,7 +346,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               {product.availableColours.map((color) => (
                 <button
                   key={color.name}
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => {
+                    setSelectedColor(color);
+                    setQuantity(1);
+                  }}
                   className={`flex items-center gap-2 p-1.5 border text-xs cursor-pointer transition-all ${
                     selectedColor.name === color.name
                       ? 'border-[#111111] bg-[#FFFFFF] shadow-xs ring-1 ring-[#111111]'
@@ -345,7 +369,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
-          {/* Size Selector with Dynamic Variant SKU & Stock Feedback */}
+          {/* Size Selector */}
           <div className="space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="uppercase font-mono text-[#858585]">
@@ -353,6 +377,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                 <strong className="text-[#111111]">
                   {selectedSize}
                 </strong>
+
                 {activeVariant && (
                   <span className="ml-2 font-mono text-[10px] text-[#858585]">
                     [{activeVariant.sku}]
@@ -372,34 +397,51 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {product.availableSizes.map((size) => {
                 const variantForSize = product.variants?.find(
-                  (v) => v.size === size && v.color.name === selectedColor.name
-                ) || product.variants?.find((v) => v.size === size);
-
-                const sizeOutOfStock = Boolean(
-                  variantForSize && variantForSize.stockCount === 0
+                  (variant) =>
+                    variant.size === size &&
+                    variant.color.name === selectedColor.name
                 );
+
+                const sizeUnavailable = hasVariantData
+                  ? !variantForSize || variantForSize.stockCount <= 0
+                  : product.stockCount <= 0;
+
+                const sizeStatusLabel =
+                  hasVariantData && !variantForSize
+                    ? 'Unavailable'
+                    : 'Sold Out';
 
                 return (
                   <button
                     key={size}
-                    onClick={() => setSelectedSize(size)}
-                    aria-label={`Size ${size}${sizeOutOfStock ? ' - Out of stock' : ''}`}
+                    onClick={() => {
+                      setSelectedSize(size);
+                      setQuantity(1);
+                    }}
+                    aria-label={`Size ${size}${
+                      sizeUnavailable ? ` - ${sizeStatusLabel}` : ''
+                    }`}
                     className={`relative py-3.5 text-xs font-mono uppercase font-bold transition-all cursor-pointer border ${
                       selectedSize === size
-                        ? sizeOutOfStock
+                        ? sizeUnavailable
                           ? 'bg-[#EAE8E2] text-[#858585] border-[#111111] shadow-xs'
                           : 'bg-[#111111] text-[#F5F4F0] border-[#111111] shadow-xs'
-                        : sizeOutOfStock
-                        ? 'bg-[#EAE8E2]/60 text-[#858585] border-[#111111]/12 hover:border-[#111111]/40'
-                        : 'bg-[#FFFFFF] text-[#111111] border-[#111111]/15 hover:border-[#111111]'
+                        : sizeUnavailable
+                          ? 'bg-[#EAE8E2]/60 text-[#858585] border-[#111111]/12 hover:border-[#111111]/40'
+                          : 'bg-[#FFFFFF] text-[#111111] border-[#111111]/15 hover:border-[#111111]'
                     }`}
                   >
-                    <span className={sizeOutOfStock ? 'line-through opacity-70' : ''}>
+                    <span
+                      className={
+                        sizeUnavailable ? 'line-through opacity-70' : ''
+                      }
+                    >
                       {size}
                     </span>
-                    {sizeOutOfStock && (
+
+                    {sizeUnavailable && (
                       <span className="block text-[8px] font-mono tracking-tight text-red-700 uppercase font-semibold">
-                        Sold Out
+                        {sizeStatusLabel}
                       </span>
                     )}
                   </button>
@@ -411,26 +453,24 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               <span className="text-[#858585]">
                 Proposed fit direction: Boxy drop-shoulder silhouette
               </span>
-              {activeVariant && (
-                <span
-                  className={`font-semibold ${
-                    isOutOfStock ? 'text-red-700' : 'text-[#111111]'
-                  }`}
-                >
-                  {isOutOfStock
-                    ? '• Out of Stock (Sampling Restock)'
-                    : `• In Stock (${activeVariant.stockCount} units)`}
-                </span>
-              )}
+
+              <span
+                className={`font-semibold ${
+                  isOutOfStock ? 'text-red-700' : 'text-[#111111]'
+                }`}
+              >
+                {isOutOfStock
+                  ? '• Out of Stock'
+                  : `• In Stock (${availableStock} units)`}
+              </span>
             </div>
           </div>
 
-          {/* Purchasing / Add to Bag Action Area */}
+          {/* Purchasing Area */}
           <div className="pt-2 border-t border-[#111111]/12 space-y-3">
             {STOREFRONT_CONFIG.allowAddToCart ? (
               <div className="space-y-4">
                 {isOutOfStock ? (
-                  /* Disabled Out of Stock Action */
                   <div className="space-y-3">
                     <Button
                       variant="outline"
@@ -440,67 +480,93 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                       className="h-12 font-mono tracking-widest text-xs opacity-50 cursor-not-allowed border-dashed flex items-center justify-center gap-2"
                     >
                       <AlertCircle className="w-4 h-4 text-red-700" />
-                      <span>Size {selectedSize} Out of Stock</span>
+                      <span>
+                        {hasVariantData && !activeVariant
+                          ? 'Variant Unavailable'
+                          : `Size ${selectedSize} Out of Stock`}
+                      </span>
                     </Button>
+
                     <p className="text-[11px] font-mono text-center text-[#858585]">
-                      Please select another size silhouette or check back during Season 001 release.
+                      Please select another available size or check back during the next release.
                     </p>
                   </div>
                 ) : (
-                  /* Active Add to Bag Action */
-                  <div className="flex gap-3 items-center">
-                    {/* Quantity Stepper */}
-                    <div className="flex items-center border border-[#111111] bg-[#FFFFFF] h-12">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                        disabled={quantity <= 1}
-                        aria-label="Decrease quantity"
-                        className="px-3.5 h-full text-[#858585] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
+                  <>
+                    <div className="flex gap-3 items-center">
+                      {/* Quantity Stepper */}
+                      <div className="flex items-center border border-[#111111] bg-[#FFFFFF] h-12">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuantity((prev) => Math.max(1, prev - 1))
+                          }
+                          disabled={quantity <= 1}
+                          aria-label="Decrease quantity"
+                          className="px-3.5 h-full text-[#858585] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+
+                        <span className="px-3 text-xs font-mono font-bold tabular-nums text-[#111111]">
+                          {quantity}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuantity((prev) =>
+                              Math.min(availableStock, prev + 1)
+                            )
+                          }
+                          disabled={quantity >= availableStock}
+                          aria-label="Increase quantity"
+                          className="px-3.5 h-full text-[#858585] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Add to Bag Button */}
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        size="lg"
+                        onClick={handleAddToCart}
+                        disabled={quantity > availableStock}
+                        className="h-12 relative overflow-hidden font-mono tracking-widest text-xs transition-transform active:scale-[0.99] cursor-pointer"
                       >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="px-3 text-xs font-mono font-bold tabular-nums text-[#111111]">
-                        {quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setQuantity((prev) =>
-                            Math.min(activeVariant?.stockCount || 10, prev + 1)
-                          )
-                        }
-                        disabled={Boolean(
-                          activeVariant && quantity >= activeVariant.stockCount
+                        {isAddedFeedback ? (
+                          <span className="flex items-center justify-center gap-2 text-[#EDEBE6]">
+                            <Check className="w-4 h-4" />
+                            <span>Added to Bag</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-2">
+                            <ShoppingBag className="w-4 h-4" />
+                            <span>
+                              Add to Bag · RM {product.price * quantity}
+                            </span>
+                          </span>
                         )}
-                        aria-label="Increase quantity"
-                        className="px-3.5 h-full text-[#858585] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
 
-                    {/* Add to Bag Button */}
-                    <Button
-                      variant="primary"
-                      fullWidth
-                      size="lg"
-                      onClick={handleAddToCart}
-                      className="h-12 relative overflow-hidden font-mono tracking-widest text-xs transition-transform active:scale-[0.99] cursor-pointer"
+                    {/* Inline Confirmation */}
+                    <div
+                      aria-live="polite"
+                      className={`flex items-center justify-center gap-2 text-[11px] font-mono text-[#555555] transition-all duration-300 ${
+                        isAddedFeedback
+                          ? 'opacity-100 translate-y-0'
+                          : 'opacity-0 -translate-y-1 pointer-events-none'
+                      }`}
                     >
-                      {isAddedFeedback ? (
-                        <span className="flex items-center justify-center gap-2 text-[#EDEBE6]">
-                          <Check className="w-4 h-4 animate-in zoom-in-75" />
-                          <span>Added to Bag · Opening...</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-2">
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>Add to Bag · RM {product.price * quantity}</span>
-                        </span>
-                      )}
-                    </Button>
-                  </div>
+                      <Check className="w-3.5 h-3.5 text-[#111111]" />
+                      <span>
+                        {product.name} added to your bag
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 <div className="text-[10px] font-mono text-[#858585] text-center">
@@ -674,11 +740,15 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       {STOREFRONT_CONFIG.allowAddToCart && (
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-30 bg-[#F5F4F0]/95 backdrop-blur-md border-t border-[#111111]/15 p-3 flex items-center justify-between gap-3 shadow-lg">
           <div className="min-w-0">
-            <div className="text-xs font-bold text-[#111111] truncate">{product.name}</div>
+            <div className="text-xs font-bold text-[#111111] truncate">
+              {product.name}
+            </div>
+
             <div className="text-[11px] font-mono font-semibold text-[#858585]">
               Size {selectedSize} · RM {product.price}
             </div>
           </div>
+
           {isOutOfStock ? (
             <Button
               variant="outline"
@@ -693,9 +763,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               variant="primary"
               size="sm"
               onClick={handleAddToCart}
+              disabled={quantity > availableStock}
               className="shrink-0 font-mono tracking-widest text-xs px-5 py-3 cursor-pointer"
             >
-              {isAddedFeedback ? '✓ Added' : 'Add to Bag'}
+              {isAddedFeedback ? (
+                <span className="flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" />
+                  Added
+                </span>
+              ) : (
+                'Add to Bag'
+              )}
             </Button>
           )}
         </div>

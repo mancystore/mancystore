@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Product, ProductCategory } from '../types/product';
 import { ProductGrid } from '../components/ProductGrid';
+import { COLLECTIONS } from '../data/collections';
 
 interface ShopProps {
   products: Product[];
@@ -43,17 +45,24 @@ export const Shop: React.FC<ShopProps> = ({
           <span className="text-xs font-mono text-[#858585] whitespace-nowrap">
             Collection:
           </span>
-          {['All', 'MNC ESSENTIALS', 'MNC SEASON 001', 'MNC ARCHIVE'].map((col) => (
+
+          {[
+            { id: 'All', name: 'All Collections' },
+            ...COLLECTIONS.map((collection) => ({
+              id: collection.name,
+              name: collection.name.replace('MNC ', ''),
+            })),
+          ].map((col) => (
             <button
-              key={col}
-              onClick={() => setSelectedCollection(col)}
+              key={col.id}
+              onClick={() => setSelectedCollection(col.id)}
               className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
-                selectedCollection === col
+                selectedCollection === col.id
                   ? 'bg-[#111111] text-[#F5F4F0] border-[#111111] font-bold'
                   : 'bg-[#FFFFFF] text-[#858585] border-[#111111]/12 hover:text-[#111111]'
               }`}
             >
-              {col === 'All' ? 'All Collections' : col.replace('MNC ', '')}
+              {col.name}
             </button>
           ))}
         </div>

@@ -31,7 +31,7 @@ export const About: React.FC<AboutProps> = ({ onNavigate }) => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7">
-            <div className="aspect-[16/10] bg-[#1E1E1E] overflow-hidden border border-[#111111]/12 group">
+            <div className="aspect-16/10 bg-[#1E1E1E] overflow-hidden border border-[#111111]/12 group">
               <ImageWithFallback
                 src={COLLECTION_ASSETS['mnc-archive'].path}
                 alt="MNC Architecture and Showroom Environment"

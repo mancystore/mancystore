@@ -177,9 +177,9 @@ export const DemonstrationCheckoutModal: React.FC<DemonstrationCheckoutModalProp
                 <span className="font-mono tabular-nums text-[#111111]">RM {subtotal}</span>
               </div>
               <div className="flex justify-between text-[#858585]">
-                <span>Domestic Express Shipping</span>
+                <span>Shipping</span>
                 <span className="font-mono tabular-nums text-[#111111]">
-                  {shippingCost === 0 ? 'FREE (Threshold met)' : `RM ${shippingCost}`}
+                  {shippingCost === 0 ? 'FREE' : `RM ${shippingCost}`}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-bold text-[#111111] pt-2 border-t border-[#111111]/10">

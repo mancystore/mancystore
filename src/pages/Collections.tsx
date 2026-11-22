@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import { Collection, Product } from '../types/product';
 import { ProductCard } from '../components/ProductCard';
 import { ImageWithFallback } from '../components/ImageWithFallback';
-import { ArrowRight, Layers, Box, Check } from 'lucide-react';
 
 interface CollectionsProps {
   collections: Collection[];
@@ -51,7 +51,7 @@ export const Collections: React.FC<CollectionsProps> = ({
           </h1>
         </div>
         <div className="text-xs font-mono text-[#858585]">
-          3 Distinct Universes
+          {collections.length} Distinct Universes
         </div>
       </div>
 
@@ -67,7 +67,9 @@ export const Collections: React.FC<CollectionsProps> = ({
                 : 'bg-[#FFFFFF] text-[#858585] border-[#111111]/12 hover:text-[#111111] hover:border-[#111111]/30'
             }`}
           >
-            <span className="text-[10px] mr-2 text-[#9A9A91]">0{idx + 1} //</span>
+            <span className="text-[10px] mr-2 text-[#9A9A91]">
+              {String(idx + 1).padStart(2, '0')}
+            </span>
             <span>{col.name}</span>
           </button>
         ))}
@@ -82,7 +84,7 @@ export const Collections: React.FC<CollectionsProps> = ({
                 {activeCollection.seasonBadge}
               </span>
               <span className="text-[10px] font-mono text-[#858585]">
-                REF: {activeCollection.id.toUpperCase()}
+                REF: {activeCollection.reference}
               </span>
             </div>
 
@@ -104,7 +106,7 @@ export const Collections: React.FC<CollectionsProps> = ({
             </div>
           </div>
 
-          <div className="lg:col-span-6 aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] bg-[#1E1E1E] overflow-hidden">
+          <div className="lg:col-span-6 aspect-16/10 sm:aspect-video lg:aspect-video bg-[#1E1E1E] overflow-hidden">
             <ImageWithFallback
               src={activeCollection.bannerImage}
               alt={activeCollection.name}

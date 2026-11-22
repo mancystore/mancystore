@@ -27,9 +27,9 @@ export type CollectionId =
   | 'mnc-season-001';
 
 export type CollectionName =
-  | 'MNC ESSENTIALS'
-  | 'MNC ARCHIVE'
-  | 'MNC SEASON 001';
+  | 'MNC CORE'
+  | 'MNC FORM'
+  | 'MNC EDITION';
 
 export type ProductSize = string;
 
@@ -157,6 +157,7 @@ export interface Product {
 export interface Collection {
   id: CollectionId;
   name: CollectionName;
+  reference: string;
 
   seasonBadge: string;
   subtitle: string;
